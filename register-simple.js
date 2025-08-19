@@ -24,7 +24,7 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
        username: username,
        email: email,
        password: password,
-       type: "R"  // Agregar el campo type que puede ser requerido
+       //type: "R"  // Agregar el campo type que puede ser requerido
      };
   
          // Mostrar mensaje de carga
