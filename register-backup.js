@@ -116,7 +116,8 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     const proxies = [
       'https://thingproxy.freeboard.io/fetch/',
       'https://cors-anywhere.herokuapp.com/',
-      'https://api.allorigins.win/raw?url='
+      'https://api.allorigins.win/raw?url=',
+      'https://corsproxy.io/?'
     ];
     
     for (let i = 0; i < proxies.length; i++) {
