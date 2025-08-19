@@ -102,6 +102,13 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   function handleSuccess() {
     document.getElementById('message').style.color = 'green';
     document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login...';
+    
+    // Remover botones de opciones si existen
+    const existingContainer = document.querySelector('.options-container');
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+    
     setTimeout(() => {
       window.location.href = 'index.html';
     }, 2000);
@@ -146,16 +153,21 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     retryButton.style.color = 'white';
     retryButton.style.cursor = 'pointer';
     
-    retryButton.onclick = function() {
-      // Limpiar mensajes y botones
-      document.getElementById('message').textContent = '';
-      const existingContainer = document.querySelector('.options-container');
-      if (existingContainer) {
-        existingContainer.remove();
-      }
-      // Intentar registro de nuevo
-      document.getElementById('registerForm').dispatchEvent(new Event('submit'));
-    };
+         retryButton.onclick = function() {
+       // Solo limpiar si no hay un mensaje de éxito
+       const messageElement = document.getElementById('message');
+       if (messageElement.style.color !== 'green') {
+         messageElement.textContent = '';
+       }
+       const existingContainer = document.querySelector('.options-container');
+       if (existingContainer) {
+         existingContainer.remove();
+       }
+       // Solo intentar registro de nuevo si no fue exitoso
+       if (messageElement.style.color !== 'green') {
+         document.getElementById('registerForm').dispatchEvent(new Event('submit'));
+       }
+     };
     
     // Agregar botones al contenedor
     optionsContainer.appendChild(simulateButton);
