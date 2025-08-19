@@ -20,18 +20,22 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       return;
     }
   
-    const payload = {
-      username: username,
-      email: email,
-      password: password,
-    };
+         const payload = {
+       username: username,
+       email: email,
+       password: password,
+       type: "R"  // Agregar el campo type que puede ser requerido
+     };
   
-    // Mostrar mensaje de carga
-    document.getElementById('message').style.color = 'blue';
-    document.getElementById('message').textContent = 'Enviando registro...';
-  
-    // Intentar con diferentes métodos
-    tryDirectConnection(payload);
+         // Mostrar mensaje de carga
+     document.getElementById('message').style.color = 'blue';
+     document.getElementById('message').textContent = 'Enviando registro...';
+   
+     // Log de los datos que se van a enviar
+     console.log('📤 Datos a enviar:', payload);
+   
+     // Intentar con diferentes métodos
+     tryDirectConnection(payload);
   });
   
   async function tryDirectConnection(payload) {
@@ -67,10 +71,19 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
          console.log('✅ Registro exitoso con status 204 (No Content)');
          handleSuccess();
          return;
-       } else {
-         console.log('❌ Error HTTP:', response.status, response.statusText);
-         throw new Error(`HTTP ${response.status}`);
-       }
+               } else {
+          console.log('❌ Error HTTP:', response.status, response.statusText);
+          
+          // Intentar leer el cuerpo de la respuesta para más detalles
+          try {
+            const errorText = await response.text();
+            console.log('❌ Detalles del error:', errorText);
+          } catch (e) {
+            console.log('❌ No se pudo leer el cuerpo del error');
+          }
+          
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
          } catch (error) {
        console.log('Conexión directa falló:', error.message);
        
