@@ -24,7 +24,6 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       username: username,
       email: email,
       password: password,
-      type: "R"
     };
   
     // Mostrar mensaje de carga
