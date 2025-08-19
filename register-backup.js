@@ -112,11 +112,11 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   async function tryWithProxy(payload) {
     const targetUrl = 'https://hotcompanyapp.company/api/Employees';
     
-    // Lista de proxies alternativos
+    // Lista de proxies alternativos más confiables
     const proxies = [
-      'https://api.allorigins.win/raw?url=',
       'https://thingproxy.freeboard.io/fetch/',
-      'https://cors-anywhere.herokuapp.com/'
+      'https://cors-anywhere.herokuapp.com/',
+      'https://api.allorigins.win/raw?url='
     ];
     
     for (let i = 0; i < proxies.length; i++) {
@@ -152,16 +152,27 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       }
     }
     
-    // Si todos los proxies fallan, mostrar error detallado
+    // Si todos los proxies fallan, mostrar opciones al usuario
     console.log('Todos los proxies fallaron');
-    document.getElementById('message').style.color = 'red';
-    document.getElementById('message').textContent = 'Error: No se pudo conectar con el servidor. Problema de CORS detectado.';
+    document.getElementById('message').style.color = 'orange';
+    document.getElementById('message').textContent = 'No se pudo conectar con el servidor. Problema de CORS detectado.';
     
-    // Agregar botón para simular registro (solo para pruebas)
+    // Crear contenedor para opciones
+    const optionsContainer = document.createElement('div');
+    optionsContainer.style.marginTop = '15px';
+    optionsContainer.style.textAlign = 'center';
+    
+    // Botón para simular registro
     const simulateButton = document.createElement('button');
-    simulateButton.textContent = 'Simular Registro (Solo Pruebas)';
-    simulateButton.style.marginTop = '10px';
+    simulateButton.textContent = 'Simular Registro (Pruebas)';
+    simulateButton.style.marginRight = '10px';
     simulateButton.style.backgroundColor = '#ff9800';
+    simulateButton.style.padding = '8px 16px';
+    simulateButton.style.border = 'none';
+    simulateButton.style.borderRadius = '4px';
+    simulateButton.style.color = 'white';
+    simulateButton.style.cursor = 'pointer';
+    
     simulateButton.onclick = function() {
       document.getElementById('message').style.color = 'green';
       document.getElementById('message').textContent = '¡Registro simulado exitoso! Redirigiendo al login...';
@@ -170,12 +181,37 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       }, 2000);
     };
     
-    // Remover botón anterior si existe
-    const existingButton = document.querySelector('.simulate-button');
-    if (existingButton) {
-      existingButton.remove();
+    // Botón para intentar de nuevo
+    const retryButton = document.createElement('button');
+    retryButton.textContent = 'Intentar de Nuevo';
+    retryButton.style.backgroundColor = '#2196F3';
+    retryButton.style.padding = '8px 16px';
+    retryButton.style.border = 'none';
+    retryButton.style.borderRadius = '4px';
+    retryButton.style.color = 'white';
+    retryButton.style.cursor = 'pointer';
+    
+    retryButton.onclick = function() {
+      // Limpiar mensajes y botones
+      document.getElementById('message').textContent = '';
+      const existingContainer = document.querySelector('.options-container');
+      if (existingContainer) {
+        existingContainer.remove();
+      }
+      // Intentar registro de nuevo
+      document.getElementById('registerForm').dispatchEvent(new Event('submit'));
+    };
+    
+    // Agregar botones al contenedor
+    optionsContainer.appendChild(simulateButton);
+    optionsContainer.appendChild(retryButton);
+    optionsContainer.className = 'options-container';
+    
+    // Remover contenedor anterior si existe
+    const existingContainer = document.querySelector('.options-container');
+    if (existingContainer) {
+      existingContainer.remove();
     }
     
-    simulateButton.className = 'simulate-button';
-    document.querySelector('.login-container').appendChild(simulateButton);
+    document.querySelector('.login-container').appendChild(optionsContainer);
   }
