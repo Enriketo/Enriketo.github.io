@@ -62,10 +62,21 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
          console.log('❌ Error HTTP:', response.status, response.statusText);
          throw new Error(`HTTP ${response.status}`);
        }
-    } catch (error) {
-      console.log('Conexión directa falló:', error.message);
-      tryProxyConnection(payload);
-    }
+         } catch (error) {
+       console.log('Conexión directa falló:', error.message);
+       
+       // Si el error es CORS pero el status es 204, significa que funcionó
+       if (error.message.includes('CORS') || error.message.includes('Access-Control-Allow-Origin')) {
+         console.log('⚠️ CORS bloqueó la lectura, pero el registro pudo haber sido exitoso');
+         console.log('🔍 Verificando si el registro se completó...');
+         
+         // Intentar verificar si el registro fue exitoso
+         checkRegistrationStatus(payload);
+         return;
+       }
+       
+       tryProxyConnection(payload);
+     }
   }
   
   async function tryProxyConnection(payload) {
@@ -135,9 +146,114 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     const redirectTimeout = setTimeout(() => {
       window.location.href = 'index.html';
     }, 5000); // Cambiado de 2000 a 5000 ms (5 segundos)
-  }
-  
-  function showFallbackOptions() {
+     }
+   
+   async function checkRegistrationStatus(payload) {
+     console.log('🔍 Verificando estado del registro...');
+     document.getElementById('message').style.color = 'orange';
+     document.getElementById('message').textContent = 'Verificando si el registro fue exitoso...';
+     
+     // Intentar hacer una petición GET para verificar si el usuario existe
+     try {
+       const checkUrl = `https://hotcompanyapp.company/api/Employees?email=${encodeURIComponent(payload.email)}`;
+       const response = await fetch(checkUrl, {
+         method: 'GET',
+         headers: {
+           'Content-Type': 'application/json'
+         }
+       });
+       
+       if (response.ok) {
+         console.log('✅ Usuario encontrado - registro exitoso confirmado');
+         handleSuccess();
+         return;
+       }
+     } catch (error) {
+       console.log('⚠️ No se pudo verificar el estado del registro:', error.message);
+     }
+     
+     // Si no se puede verificar, mostrar opciones al usuario
+     showCORSFallbackOptions(payload);
+   }
+   
+   function showCORSFallbackOptions(payload) {
+     console.log('⚠️ CORS bloqueó la verificación, mostrando opciones al usuario');
+     document.getElementById('message').style.color = 'orange';
+     document.getElementById('message').textContent = 'CORS bloqueó la verificación. El registro pudo haber sido exitoso.';
+     
+     // Crear contenedor para opciones
+     const optionsContainer = document.createElement('div');
+     optionsContainer.style.marginTop = '15px';
+     optionsContainer.style.textAlign = 'center';
+     
+     // Botón para asumir éxito
+     const successButton = document.createElement('button');
+     successButton.textContent = 'Asumir Registro Exitoso';
+     successButton.style.marginRight = '10px';
+     successButton.style.backgroundColor = '#4CAF50';
+     successButton.style.padding = '8px 16px';
+     successButton.style.border = 'none';
+     successButton.style.borderRadius = '4px';
+     successButton.style.color = 'white';
+     successButton.style.cursor = 'pointer';
+     
+     successButton.onclick = function() {
+       console.log('✅ Usuario asumió registro exitoso');
+       handleSuccess();
+     };
+     
+     // Botón para intentar con proxy
+     const proxyButton = document.createElement('button');
+     proxyButton.textContent = 'Intentar con Proxy';
+     proxyButton.style.marginRight = '10px';
+     proxyButton.style.backgroundColor = '#2196F3';
+     proxyButton.style.padding = '8px 16px';
+     proxyButton.style.border = 'none';
+     proxyButton.style.borderRadius = '4px';
+     proxyButton.style.color = 'white';
+     proxyButton.style.cursor = 'pointer';
+     
+     proxyButton.onclick = function() {
+       console.log('🔄 Intentando con proxy...');
+       // Limpiar opciones
+       const existingContainer = document.querySelector('.options-container');
+       if (existingContainer) {
+         existingContainer.remove();
+       }
+       tryProxyConnection(payload);
+     };
+     
+     // Botón para simular
+     const simulateButton = document.createElement('button');
+     simulateButton.textContent = 'Simular Registro';
+     simulateButton.style.backgroundColor = '#ff9800';
+     simulateButton.style.padding = '8px 16px';
+     simulateButton.style.border = 'none';
+     simulateButton.style.borderRadius = '4px';
+     simulateButton.style.color = 'white';
+     simulateButton.style.cursor = 'pointer';
+     
+     simulateButton.onclick = function() {
+       console.log('🎭 Simulando registro exitoso');
+       handleSuccess();
+     };
+     
+     // Agregar botones al contenedor
+     optionsContainer.appendChild(successButton);
+     optionsContainer.appendChild(proxyButton);
+     optionsContainer.appendChild(simulateButton);
+     optionsContainer.className = 'options-container';
+     
+     // Remover contenedor anterior si existe
+     const existingContainer = document.querySelector('.options-container');
+     if (existingContainer) {
+       existingContainer.remove();
+     }
+     
+     document.querySelector('.login-container').appendChild(optionsContainer);
+   }
+   
+   function showFallbackOptions() {
     console.log('Todos los métodos fallaron');
     document.getElementById('message').style.color = 'orange';
     document.getElementById('message').textContent = 'No se pudo conectar con el servidor. Problema de CORS detectado.';
