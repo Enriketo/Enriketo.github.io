@@ -27,13 +27,39 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       type: "R" // Campo fijo para registro
     };
   
-    fetch('https://hotcompanyapp.company/api/Employees', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    })
+    // Función para hacer la petición con diferentes proxies
+    async function makeRequest(payload) {
+      const targetUrl = 'https://hotcompanyapp.company/api/Employees';
+      const proxies = [
+        'https://cors-anywhere.herokuapp.com/',
+        'https://api.allorigins.win/raw?url=',
+        'https://thingproxy.freeboard.io/fetch/'
+      ];
+      
+      for (let i = 0; i < proxies.length; i++) {
+        try {
+          const response = await fetch(proxies[i] + targetUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Origin': window.location.origin
+            },
+            body: JSON.stringify(payload)
+          });
+          
+          if (response.ok) {
+            return response;
+          }
+        } catch (error) {
+          console.log(`Proxy ${i + 1} falló, intentando siguiente...`);
+          continue;
+        }
+      }
+      
+      throw new Error('Todos los proxies fallaron');
+    }
+    
+    makeRequest(payload)
     .then(response => {
       if (!response.ok) {
         throw new Error('Error en la respuesta del servidor');
