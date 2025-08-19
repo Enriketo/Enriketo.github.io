@@ -24,7 +24,7 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       username: username,
       email: email,
       password: password,
-      type: "R" // Campo fijo para registro
+      //type: "R" // Campo fijo para registro
     };
   
     // Función para hacer la petición con diferentes proxies
