@@ -48,11 +48,14 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
         } else if (xhr.status === 0) {
           // CORS bloqueó la petición completamente
           console.log('CORS bloqueó la petición, intentando con proxy...');
+          document.getElementById('message').style.color = 'orange';
+          document.getElementById('message').textContent = 'CORS bloqueó la conexión. Intentando con proxy...';
           tryWithProxy(payload);
         } else {
           // Error en la respuesta
           document.getElementById('message').style.color = 'red';
           document.getElementById('message').textContent = 'Error en el registro. Código: ' + xhr.status;
+          console.log('Error HTTP:', xhr.status, xhr.statusText);
         }
       }
     };
@@ -90,9 +93,13 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       'https://cors-anywhere.herokuapp.com/'
     ];
     
-    for (let proxy of proxies) {
+    for (let i = 0; i < proxies.length; i++) {
+      const proxy = proxies[i];
       try {
-        console.log('Intentando con proxy:', proxy);
+        console.log(`Intentando con proxy ${i + 1}/${proxies.length}:`, proxy);
+        document.getElementById('message').style.color = 'blue';
+        document.getElementById('message').textContent = `Intentando proxy ${i + 1}/${proxies.length}...`;
+        
         const response = await fetch(proxy + encodeURIComponent(targetUrl), {
           method: 'POST',
           headers: {
@@ -101,6 +108,8 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
           body: JSON.stringify(payload)
         });
         
+        console.log(`Proxy ${i + 1} respuesta:`, response.status, response.statusText);
+        
         if (response.ok) {
           document.getElementById('message').style.color = 'green';
           document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login...';
@@ -108,18 +117,39 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
             window.location.href = 'index.html';
           }, 2000);
           return;
+        } else {
+          console.log(`Proxy ${i + 1} falló con status:`, response.status);
         }
       } catch (error) {
-        console.log('Proxy falló:', proxy, error);
+        console.log(`Proxy ${i + 1} falló con error:`, error.message);
         continue;
       }
     }
     
-    // Si todos los proxies fallan, simular registro exitoso para pruebas
-    console.log('Todos los proxies fallaron, simulando registro exitoso...');
-    document.getElementById('message').style.color = 'green';
-    document.getElementById('message').textContent = '¡Registro simulado exitoso! Redirigiendo al login...';
-    setTimeout(() => {
-      window.location.href = 'index.html';
-    }, 2000);
+    // Si todos los proxies fallan, mostrar error detallado
+    console.log('Todos los proxies fallaron');
+    document.getElementById('message').style.color = 'red';
+    document.getElementById('message').textContent = 'Error: No se pudo conectar con el servidor. Problema de CORS detectado.';
+    
+    // Agregar botón para simular registro (solo para pruebas)
+    const simulateButton = document.createElement('button');
+    simulateButton.textContent = 'Simular Registro (Solo Pruebas)';
+    simulateButton.style.marginTop = '10px';
+    simulateButton.style.backgroundColor = '#ff9800';
+    simulateButton.onclick = function() {
+      document.getElementById('message').style.color = 'green';
+      document.getElementById('message').textContent = '¡Registro simulado exitoso! Redirigiendo al login...';
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 2000);
+    };
+    
+    // Remover botón anterior si existe
+    const existingButton = document.querySelector('.simulate-button');
+    if (existingButton) {
+      existingButton.remove();
+    }
+    
+    simulateButton.className = 'simulate-button';
+    document.querySelector('.login-container').appendChild(simulateButton);
   }
