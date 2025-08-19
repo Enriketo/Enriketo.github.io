@@ -38,13 +38,40 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
-        if (xhr.status === 200 || xhr.status === 204) {
-          // Éxito - incluso si es 204 (No Content)
+        console.log('XMLHttpRequest completado. Status:', xhr.status);
+        
+        if (xhr.status === 200) {
+          // Solo considerar 200 como éxito real
           document.getElementById('message').style.color = 'green';
           document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login...';
           setTimeout(() => {
             window.location.href = 'index.html';
           }, 2000);
+        } else if (xhr.status === 204) {
+          // 204 significa "No Content" - puede ser éxito o error
+          console.log('Respuesta 204 recibida. Verificando respuesta...');
+          document.getElementById('message').style.color = 'orange';
+          document.getElementById('message').textContent = 'Respuesta 204 recibida. Verificando si el registro fue exitoso...';
+          
+          // Intentar leer la respuesta para verificar
+          try {
+            const responseText = xhr.responseText;
+            console.log('Respuesta del servidor:', responseText);
+            
+            if (responseText && responseText.includes('success')) {
+              document.getElementById('message').style.color = 'green';
+              document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login...';
+              setTimeout(() => {
+                window.location.href = 'index.html';
+              }, 2000);
+            } else {
+              document.getElementById('message').style.color = 'red';
+              document.getElementById('message').textContent = 'Error: Respuesta 204 sin confirmación de éxito';
+            }
+          } catch (error) {
+            document.getElementById('message').style.color = 'red';
+            document.getElementById('message').textContent = 'Error: No se pudo verificar la respuesta del servidor';
+          }
         } else if (xhr.status === 0) {
           // CORS bloqueó la petición completamente
           console.log('CORS bloqueó la petición, intentando con proxy...');
