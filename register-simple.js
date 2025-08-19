@@ -50,16 +50,19 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       
       console.log('Respuesta directa:', response.status);
       
-      if (response.ok) {
-        handleSuccess();
-        return;
-      } else if (response.status === 204) {
-        // 204 significa éxito pero sin contenido
-        handleSuccess();
-        return;
-      } else {
-        throw new Error(`HTTP ${response.status}`);
-      }
+             if (response.ok) {
+         console.log('✅ Registro exitoso con status:', response.status);
+         handleSuccess();
+         return;
+       } else if (response.status === 204) {
+         // 204 significa éxito pero sin contenido
+         console.log('✅ Registro exitoso con status 204 (No Content)');
+         handleSuccess();
+         return;
+       } else {
+         console.log('❌ Error HTTP:', response.status, response.statusText);
+         throw new Error(`HTTP ${response.status}`);
+       }
     } catch (error) {
       console.log('Conexión directa falló:', error.message);
       tryProxyConnection(payload);
@@ -87,12 +90,14 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       
       console.log('Respuesta proxy:', response.status);
       
-      if (response.ok) {
-        handleSuccess();
-        return;
-      } else {
-        throw new Error(`Proxy HTTP ${response.status}`);
-      }
+             if (response.ok) {
+         console.log('✅ Registro exitoso con proxy, status:', response.status);
+         handleSuccess();
+         return;
+       } else {
+         console.log('❌ Error con proxy HTTP:', response.status, response.statusText);
+         throw new Error(`Proxy HTTP ${response.status}`);
+       }
     } catch (error) {
       console.log('Proxy falló:', error.message);
       showFallbackOptions();
@@ -101,7 +106,7 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   
   function handleSuccess() {
     document.getElementById('message').style.color = 'green';
-    document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login...';
+    document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login en 5 segundos...';
     
     // Remover botones de opciones si existen
     const existingContainer = document.querySelector('.options-container');
@@ -109,9 +114,28 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       existingContainer.remove();
     }
     
-    setTimeout(() => {
+    // Crear botón para cancelar redirección
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancelar Redirección';
+    cancelButton.style.marginTop = '10px';
+    cancelButton.style.backgroundColor = '#f44336';
+    cancelButton.style.padding = '8px 16px';
+    cancelButton.style.border = 'none';
+    cancelButton.style.borderRadius = '4px';
+    cancelButton.style.color = 'white';
+    cancelButton.style.cursor = 'pointer';
+    
+    cancelButton.onclick = function() {
+      document.getElementById('message').textContent = '¡Registro exitoso! Redirección cancelada.';
+      clearTimeout(redirectTimeout);
+    };
+    
+    document.querySelector('.login-container').appendChild(cancelButton);
+    
+    // Aumentar el tiempo para que puedas ver los detalles
+    const redirectTimeout = setTimeout(() => {
       window.location.href = 'index.html';
-    }, 2000);
+    }, 5000); // Cambiado de 2000 a 5000 ms (5 segundos)
   }
   
   function showFallbackOptions() {
