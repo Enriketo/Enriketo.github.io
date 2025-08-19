@@ -30,33 +30,61 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     // Función para hacer la petición con diferentes proxies
     async function makeRequest(payload) {
       const targetUrl = 'https://hotcompanyapp.company/api/Employees';
-      const proxies = [
-        'https://cors-anywhere.herokuapp.com/',
-        'https://api.allorigins.win/raw?url=',
-        'https://thingproxy.freeboard.io/fetch/'
-      ];
       
-      for (let i = 0; i < proxies.length; i++) {
-        try {
-          const response = await fetch(proxies[i] + targetUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Origin': window.location.origin
-            },
-            body: JSON.stringify(payload)
-          });
-          
-          if (response.ok) {
-            return response;
-          }
-        } catch (error) {
-          console.log(`Proxy ${i + 1} falló, intentando siguiente...`);
-          continue;
+      // Opción 1: Intentar directamente (por si el backend ya tiene CORS configurado)
+      try {
+        const directResponse = await fetch(targetUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (directResponse.ok) {
+          return directResponse;
         }
+      } catch (error) {
+        console.log('Petición directa falló, intentando con proxy...');
       }
       
-      throw new Error('Todos los proxies fallaron');
+      // Opción 2: Usar un proxy más confiable
+      const proxyUrl = 'https://api.allorigins.win/raw?url=';
+      
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          return response;
+        }
+      } catch (error) {
+        console.log('Proxy falló:', error);
+      }
+      
+      // Opción 3: Usar un servicio de proxy alternativo
+      try {
+        const response = await fetch('https://thingproxy.freeboard.io/fetch/' + targetUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          return response;
+        }
+      } catch (error) {
+        console.log('Proxy alternativo falló:', error);
+      }
+      
+      throw new Error('No se pudo conectar con el servidor');
     }
     
     makeRequest(payload)
