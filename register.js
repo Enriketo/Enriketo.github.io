@@ -31,13 +31,19 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     document.getElementById('message').style.color = 'blue';
     document.getElementById('message').textContent = 'Procesando registro...';
     
-    // Hacer petición normal al endpoint establecido
-    const targetUrl = 'https://hotcompanyapp.company/api/Employees';
+    // Hacer petición a través del Cloudflare Worker para evitar problemas de CORS
+    // TODO: Reemplazar con tu URL del worker real
+    const workerUrl = 'https://your-worker-name.your-subdomain.workers.dev';
     
-    fetch(targetUrl, {
+    // Alternativa temporal: usar proxy CORS público
+    const targetUrl = 'https://hotcompanyapp.company/api/Employees';
+    const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${targetUrl}`;
+    
+    fetch(corsProxyUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin
       },
       body: JSON.stringify(payload)
     })
