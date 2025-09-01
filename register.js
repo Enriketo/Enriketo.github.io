@@ -27,79 +27,42 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       //type: "R" // Campo fijo para registro
     };
   
-    // Función para hacer la petición con diferentes proxies
-    async function makeRequest(payload) {
-      const targetUrl = 'https://hotcompanyapp.company/api/Employees';
-      
-      // Opción 1: Intentar directamente (por si el backend ya tiene CORS configurado)
-      try {
-        const directResponse = await fetch(targetUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (directResponse.ok) {
-          return directResponse;
-        }
-      } catch (error) {
-        console.log('Petición directa falló, intentando con proxy...');
-      }
-      
-      // Opción 2: Usar un proxy más confiable
-      const proxyUrl = 'https://api.allorigins.win/raw?url=';
-      
-      try {
-        const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-          return response;
-        }
-      } catch (error) {
-        console.log('Proxy falló:', error);
-      }
-      
-      // Opción 3: Usar un servicio de proxy alternativo
-      try {
-        const response = await fetch('https://thingproxy.freeboard.io/fetch/' + targetUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-          return response;
-        }
-      } catch (error) {
-        console.log('Proxy alternativo falló:', error);
-      }
-      
-      // Opción 4: Simular respuesta exitosa para pruebas (temporal)
-      console.log('Simulando registro exitoso para pruebas...');
-      return {
-        ok: true,
-        json: () => Promise.resolve({ success: true, message: 'Registro simulado exitoso' })
-      };
-    }
+    // Mostrar mensaje de "procesando"
+    document.getElementById('message').style.color = 'blue';
+    document.getElementById('message').textContent = 'Procesando registro...';
     
-    makeRequest(payload)
+    // Hacer petición normal al endpoint establecido
+    const targetUrl = 'https://hotcompanyapp.company/api/Employees';
+    
+    fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
     .then(response => {
+      // Log detallado de la respuesta para debugging
+      console.log('Respuesta del servidor:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        url: response.url
+      });
+      
       if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
+        // Si hay error HTTP, obtener el cuerpo de la respuesta para más detalles
+        return response.text().then(errorText => {
+          throw new Error(`Error HTTP ${response.status}: ${response.statusText}. Respuesta: ${errorText}`);
+        });
       }
+      
       return response.json();
     })
     .then(data => {
+      // Log de la respuesta exitosa
+      console.log('Respuesta exitosa del servidor:', data);
+      
       // Aquí puedes manejar la respuesta del backend
       if (data.success) {
         document.getElementById('message').style.color = 'green';
@@ -111,11 +74,24 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       } else {
         document.getElementById('message').style.color = 'red';
         document.getElementById('message').textContent = data.message || 'Error en el registro';
+        console.error('Error en la respuesta del servidor:', data);
       }
     })
     .catch(error => {
-      console.error('Error al conectar con el backend:', error);
+      // Log detallado del error para debugging
+      console.error('Error completo:', error);
+      console.error('Stack trace:', error.stack);
+      
+      // Mostrar mensaje de error en la página
       document.getElementById('message').style.color = 'red';
-      document.getElementById('message').textContent = 'No se pudo conectar con el servidor';
+      document.getElementById('message').textContent = `Error: ${error.message}`;
+      
+      // Mostrar información adicional para debugging
+      console.log('Información adicional para debugging:');
+      console.log('- Payload enviado:', payload);
+      console.log('- URL del endpoint:', targetUrl);
+      console.log('- Timestamp del error:', new Date().toISOString());
+      
+      // El usuario permanece en la página para poder revisar la consola
     });
   });
