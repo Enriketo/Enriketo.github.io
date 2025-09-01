@@ -23,32 +23,24 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     const payload = {
       username: username,
       email: email,
-      password: password,
-      //type: "R" // Campo fijo para registro
+      password: password
     };
   
     // Mostrar mensaje de "procesando"
     document.getElementById('message').style.color = 'blue';
     document.getElementById('message').textContent = 'Procesando registro...';
     
-    // Hacer petición a través del Cloudflare Worker para evitar problemas de CORS
-    // TODO: Reemplazar con tu URL del worker real
-    const workerUrl = 'https://your-worker-name.your-subdomain.workers.dev';
-    
-    // Alternativa temporal: usar proxy CORS público
+    // Intentar petición directa primero
     const targetUrl = 'https://hotcompanyapp.company/api/Employees';
-    const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${targetUrl}`;
     
-    fetch(corsProxyUrl, {
+    fetch(targetUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Origin': window.location.origin
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     })
     .then(response => {
-      // Log detallado de la respuesta para debugging
       console.log('Respuesta del servidor:', {
         status: response.status,
         statusText: response.statusText,
@@ -57,7 +49,6 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       });
       
       if (!response.ok) {
-        // Si hay error HTTP, obtener el cuerpo de la respuesta para más detalles
         return response.text().then(errorText => {
           throw new Error(`Error HTTP ${response.status}: ${response.statusText}. Respuesta: ${errorText}`);
         });
@@ -66,14 +57,11 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       return response.json();
     })
     .then(data => {
-      // Log de la respuesta exitosa
       console.log('Respuesta exitosa del servidor:', data);
       
-      // Aquí puedes manejar la respuesta del backend
       if (data.success) {
         document.getElementById('message').style.color = 'green';
         document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login...';
-        // Redirigir al login después de 2 segundos
         setTimeout(() => {
           window.location.href = 'index.html';
         }, 2000);
@@ -84,20 +72,50 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       }
     })
     .catch(error => {
-      // Log detallado del error para debugging
       console.error('Error completo:', error);
       console.error('Stack trace:', error.stack);
       
-      // Mostrar mensaje de error en la página
-      document.getElementById('message').style.color = 'red';
-      document.getElementById('message').textContent = `Error: ${error.message}`;
+      // Si falla por CORS, intentar con proxy
+      if (error.message.includes('CORS') || error.message.includes('Forbidden')) {
+        console.log('Error de CORS detectado, intentando con proxy...');
+        
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+        
+        fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(response => {
+          console.log('Respuesta del proxy:', response);
+          if (!response.ok) {
+            throw new Error(`Error del proxy: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Respuesta exitosa del proxy:', data);
+          document.getElementById('message').style.color = 'green';
+          document.getElementById('message').textContent = '¡Registro exitoso! Redirigiendo al login...';
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 2000);
+        })
+        .catch(proxyError => {
+          console.error('Error del proxy:', proxyError);
+          document.getElementById('message').style.color = 'red';
+          document.getElementById('message').textContent = `Error: ${error.message}. Intenta más tarde.`;
+        });
+      } else {
+        document.getElementById('message').style.color = 'red';
+        document.getElementById('message').textContent = `Error: ${error.message}`;
+      }
       
-      // Mostrar información adicional para debugging
       console.log('Información adicional para debugging:');
       console.log('- Payload enviado:', payload);
       console.log('- URL del endpoint:', targetUrl);
       console.log('- Timestamp del error:', new Date().toISOString());
-      
-      // El usuario permanece en la página para poder revisar la consola
     });
   });
